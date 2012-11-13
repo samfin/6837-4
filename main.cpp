@@ -27,7 +27,12 @@ int main( int argc, char* argv[] )
     {
       std::cout << "Argument " << argNum << " is: " << argv[argNum] << std::endl;
     }
-	
+  /*
+  Sphere s = Sphere(Vector3f(1, 0, 0), 5, NULL);
+  Hit h = Hit();
+  Ray r = Ray(Vector3f(0, 0, 10), Vector3f(0, 0, -1));
+  cout << s.intersect(r, h, 0) << "\n";
+  */
     
   // First, parse the scene using SceneParser.
   // Then loop over each pixel in the image, shooting a ray

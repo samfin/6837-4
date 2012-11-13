@@ -12,7 +12,50 @@
 
 using namespace std;
 
-float clampedDepth ( float depthInput, float depthMin , float depthMax);
+float clampedDepth ( float depthInput, float depthMin , float depthMax) {
+    return 1 - (max(min(depthInput, depthMax), depthMin) - depthMin) / (depthMax - depthMin);
+}
+
+struct args {
+    char *input;
+    int w, h;
+    char *output;
+    int dmin, dmax;
+    char *depth;
+};
+
+int parse_int(char *x) {
+    int k = 0, i = 0;
+    while(x[i]) {
+        k = 10 * k + (x[i++] - '0');
+    }
+    return k;
+}
+
+void get_args(int argc, char *argv[], args &args) {
+    args.depth = 0;
+    for(int i = 1; i < argc; ) {
+        if(strcmp(argv[i],"-input")==0) {
+            args.input = argv[i+1];
+            i += 2;
+        } else if(strcmp(argv[i],"-size")==0) {
+            args.w = parse_int(argv[i+1]);
+            args.h = parse_int(argv[i+2]);
+            i += 3;
+        } else if(strcmp(argv[i],"-output")==0) {
+            args.output = argv[i+1];
+            i += 2;
+        } else if(strcmp(argv[i],"-depth")==0) {
+            args.dmin = parse_int(argv[i+1]);
+            args.dmax = parse_int(argv[i+2]);
+            args.depth = argv[i+3];
+            i += 4;
+        } else {
+            cout << "Could not recognize argument " << argv[i] << "\n";
+            i++;
+        }
+    }
+}
 
 #include "bitmap_image.hpp"
 int main( int argc, char* argv[] )
@@ -27,12 +70,8 @@ int main( int argc, char* argv[] )
     {
       std::cout << "Argument " << argNum << " is: " << argv[argNum] << std::endl;
     }
-  /*
-  Sphere s = Sphere(Vector3f(1, 0, 0), 5, NULL);
-  Hit h = Hit();
-  Ray r = Ray(Vector3f(0, 0, 10), Vector3f(0, 0, -1));
-  cout << s.intersect(r, h, 0) << "\n";
-  */
+  args x;
+  get_args(argc, argv, x);
     
   // First, parse the scene using SceneParser.
   // Then loop over each pixel in the image, shooting a ray
@@ -40,16 +79,39 @@ int main( int argc, char* argv[] )
   // the scene.  Write the color at the intersection to that
   // pixel in your output image.
 
-
-
+  SceneParser *parser = new SceneParser(x.input);
+  Image image(x.w, x.h);
+  Image depth(x.w, x.h);
+  Vector3f missColor (0,0,0);
+  Vector3f hitColor (1.0f,0,0);
+  Camera *camera = parser->getCamera();
+  Group *group = parser->getGroup();
+  for(int i = 0; i < x.w; i++) {
+    for(int j = 0; j < x.h; j++) {
+        float x0 = i * 2.0 / (x.w - 1) - 1;
+        float x1 = j * 2.0 / (x.w - 1) - 1;
+        Ray r = camera->generateRay(Vector2f(x0, x1));
+        Vector3f center = r.getOrigin();
+        Vector3f dir = r.getDirection();
+        Hit h;
+        bool b = group->intersect(r, h, camera->getTMin());
+        if(b) {
+            image.SetPixel(i, j, hitColor);
+            if(x.depth) {
+                float f = clampedDepth(h.getT(), x.dmin, x.dmax);
+                depth.SetPixel(i, j, Vector3f(f, f, f));
+            }
+        } else {
+            image.SetPixel(i, j, missColor);
+        }
+    }
+  }
+  image.SaveImage(x.output);
+  if(x.depth) depth.SaveImage(x.depth);
+  delete parser;
  
   ///TODO: below demonstrates how to use the provided Image class
   ///Should be removed when you start
-  Vector3f pixelColor (1.0f,0,0);
-  //width and height
-  Image image( 10 , 15 );
-  image.SetPixel( 5,5, pixelColor );
-  image.SaveImage("demo.bmp");
   return 0;
 }
 

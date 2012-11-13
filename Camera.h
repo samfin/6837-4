@@ -39,9 +39,9 @@ public:
 	}
 
 	virtual Ray generateRay( const Vector2f& point){
-		Vector3f v = point[0] * u + point[1] * v + w;
-		v.normalize();
-		return Ray(center, v);
+		Vector3f x = point[0] * u + point[1] * v + w;
+		x.normalize();
+		return Ray(center, x);
 	}
 
 	virtual float getTMin() const { 

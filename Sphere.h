@@ -53,7 +53,6 @@ public:
         // cout << v[0] << " " << v[1] << " " << v[2] << "\n";
         Vector3f n = r.pointAtParameter(t) - center;
         n.normalize();
-        n += center;
         h.set(t, material, n);
         return 1;
 	}

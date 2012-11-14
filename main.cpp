@@ -120,9 +120,6 @@ int main( int argc, char* argv[] )
   image.SaveImage(x.output);
   if(x.depth) depth.SaveImage(x.depth);
   delete parser;
- 
-  ///TODO: below demonstrates how to use the provided Image class
-  ///Should be removed when you start
   return 0;
 }
 

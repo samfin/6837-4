@@ -82,7 +82,7 @@ int main( int argc, char* argv[] )
   SceneParser *parser = new SceneParser(x.input);
   Image image(x.w, x.h);
   Image depth(x.w, x.h);
-  float k_a = 1.0, k_d = 1.0;
+  float k_a = 1.0;
   Camera *camera = parser->getCamera();
   Group *group = parser->getGroup();
   vector<Light*> lights;
@@ -99,13 +99,14 @@ int main( int argc, char* argv[] )
         Hit h;
         bool b = group->intersect(r, h, camera->getTMin());
         if(b) {
-            Vector3f color = ambient;
+            Vector3f diffuse = h.getMaterial()->getDiffuseColor();
+            Vector3f color = Vector3f(ambient[0] * diffuse[0], ambient[1] * diffuse[1], ambient[2] * diffuse[2]);
             for(int k = 0; k < lights.size(); k++) {
                 Vector3f p = r.pointAtParameter(h.getT());
                 Vector3f dir, col;
                 float dist;
                 lights[k]->getIllumination(p, dir, col, dist);
-                color += k_d * h.getMaterial()->Shade(r, h, dir, col);
+                color += h.getMaterial()->Shade(r, h, dir, col);
             }
             image.SetPixel(i, j, color);
             if(x.depth) {

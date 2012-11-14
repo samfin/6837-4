@@ -82,14 +82,13 @@ int main( int argc, char* argv[] )
   SceneParser *parser = new SceneParser(x.input);
   Image image(x.w, x.h);
   Image depth(x.w, x.h);
-  float k_a = 1.0;
   Camera *camera = parser->getCamera();
   Group *group = parser->getGroup();
   vector<Light*> lights;
   for(int i = 0; i < parser->getNumLights(); i++) {
     lights.push_back(parser->getLight(i));
   }
-  Vector3f ambient = k_a * parser->getAmbientLight();
+  Vector3f ambient = parser->getAmbientLight();
   Vector3f background = parser->getBackgroundColor();
   for(int i = 0; i < x.w; i++) {
     for(int j = 0; j < x.h; j++) {
@@ -99,8 +98,7 @@ int main( int argc, char* argv[] )
         Hit h;
         bool b = group->intersect(r, h, camera->getTMin());
         if(b) {
-            Vector3f diffuse = h.getMaterial()->getDiffuseColor();
-            Vector3f color = Vector3f(ambient[0] * diffuse[0], ambient[1] * diffuse[1], ambient[2] * diffuse[2]);
+            Vector3f color = h.getMaterial()->ambientShade(h, ambient);
             for(int k = 0; k < lights.size(); k++) {
                 Vector3f p = r.pointAtParameter(h.getT());
                 Vector3f dir, col;

@@ -30,6 +30,14 @@ public:
     return  diffuseColor;
   }
     
+  Vector3f ambientShade(const Hit& hit, const Vector3f& ambient) {
+    float k_a = 1.0;
+    Vector3f d_col = diffuseColor;
+    if(hit.hasTex && t.valid()) {
+        d_col = t(hit.texCoord[0], hit.texCoord[1]);
+    }
+    return k_a * Vector3f(ambient[0] * d_col[0], ambient[1] * d_col[1], ambient[2] * d_col[2]);
+  }
 
   Vector3f Shade( const Ray& ray, const Hit& hit,
                   const Vector3f& dirToLight, const Vector3f& lightColor ) {
@@ -39,7 +47,11 @@ public:
     n.normalize();
     float d = Vector3f::dot(dirToLight, n);
     if(d < 0) d = 0;
-    Vector3f diffuse = d * Vector3f(lightColor[0] * diffuseColor[0], lightColor[1] * diffuseColor[1], lightColor[2] * diffuseColor[2]);
+    Vector3f d_col = diffuseColor;
+    if(hit.hasTex && t.valid()) {
+        d_col = t(hit.texCoord[0], hit.texCoord[1]);
+    }
+    Vector3f diffuse = d * Vector3f(lightColor[0] * d_col[0], lightColor[1] * d_col[1], lightColor[2] * d_col[2]);
     Vector3f r = ray.getDirection();
     r = r - 2 * Vector3f::dot(r, n) * n;
     r.normalize();

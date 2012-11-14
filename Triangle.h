@@ -35,6 +35,10 @@ public:
 		if(coords[0] < 0 || coords[1] < 0 || alpha < 0) return 0;
 		Vector3f normal = normals[0] * alpha + normals[1] * coords[0] + normals[2] * coords[1];
 		hit.set(coords[2], material, normal);
+		if(hasTex) {
+		    Vector2f u = texCoords[0] * alpha + texCoords[1] * coords[0] + texCoords[2] * coords[1];
+		    hit.setTexCoord(u);
+		}
 		return 1;
 	}
 	bool hasTex;

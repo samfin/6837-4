@@ -19,8 +19,8 @@ public:
 		material = 0;
 	}
 
-	Sphere( Vector3f center , float radius , Material* material ):center(center), radius(radius), Object3D(material){
-        
+	Sphere( Vector3f center , float radius , Material* material ):material(material), center(center), radius(radius) {
+	    
 	}
 	
 

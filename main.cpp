@@ -86,17 +86,29 @@ int main( int argc, char* argv[] )
   Vector3f hitColor (1.0f,0,0);
   Camera *camera = parser->getCamera();
   Group *group = parser->getGroup();
+  vector<Light*> lights;
+  for(int i = 0; i < parser->getNumLights(); i++) {
+    lights.push_back(parser->getLight(i));
+  }
+  Vector3f ambient = parser->getAmbientLight();
+  float k_a = 1.0, k_d = 1.0;
   for(int i = 0; i < x.w; i++) {
     for(int j = 0; j < x.h; j++) {
         float x0 = i * 2.0 / (x.w - 1) - 1;
         float x1 = j * 2.0 / (x.w - 1) - 1;
         Ray r = camera->generateRay(Vector2f(x0, x1));
-        Vector3f center = r.getOrigin();
-        Vector3f dir = r.getDirection();
         Hit h;
         bool b = group->intersect(r, h, camera->getTMin());
         if(b) {
-            image.SetPixel(i, j, hitColor);
+            Vector3f color = k_a * ambient;
+            for(int k = 0; k < lights.size(); k++) {
+                Vector3f p = r.pointAtParameter(h.getT());
+                Vector3f dir, col;
+                float dist;
+                lights[k]->getIllumination(p, dir, col, dist);
+                color += k_d * h.getMaterial()->Shade(r, h, dir, col);
+            }
+            image.SetPixel(i, j, color);
             if(x.depth) {
                 float f = clampedDepth(h.getT(), x.dmin, x.dmax);
                 depth.SetPixel(i, j, Vector3f(f, f, f));

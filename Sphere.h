@@ -16,10 +16,9 @@ public:
 		//unit ball at the center
 		center = Vector3f(0, 0, 0);
 		radius = 1;
-		material = 0;
 	}
 
-	Sphere( Vector3f center , float radius , Material* material ):material(material), center(center), radius(radius) {
+	Sphere( Vector3f center , float radius , Material* material ):Object3D(material), center(center), radius(radius) {
 	    
 	}
 	
@@ -49,18 +48,15 @@ public:
         if(t >= h.getT())
             return 0;
         // intersection found
-        Vector3f v = r.pointAtParameter(t);
-        // cout << v[0] << " " << v[1] << " " << v[2] << "\n";
         Vector3f n = r.pointAtParameter(t) - center;
         n.normalize();
-        h.set(t, material, n);
+        h.set(t, this->material, n);
         return 1;
 	}
 
 protected:
 	Vector3f center;
 	float radius;
-	Material *material;
 };
 
 

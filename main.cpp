@@ -82,16 +82,15 @@ int main( int argc, char* argv[] )
   SceneParser *parser = new SceneParser(x.input);
   Image image(x.w, x.h);
   Image depth(x.w, x.h);
-  Vector3f missColor (0,0,0);
-  Vector3f hitColor (1.0f,0,0);
+  float k_a = 1.0, k_d = 1.0;
   Camera *camera = parser->getCamera();
   Group *group = parser->getGroup();
   vector<Light*> lights;
   for(int i = 0; i < parser->getNumLights(); i++) {
     lights.push_back(parser->getLight(i));
   }
-  Vector3f ambient = parser->getAmbientLight();
-  float k_a = 1.0, k_d = 1.0;
+  Vector3f ambient = k_a * parser->getAmbientLight();
+  Vector3f background = parser->getBackgroundColor();
   for(int i = 0; i < x.w; i++) {
     for(int j = 0; j < x.h; j++) {
         float x0 = i * 2.0 / (x.w - 1) - 1;
@@ -100,7 +99,7 @@ int main( int argc, char* argv[] )
         Hit h;
         bool b = group->intersect(r, h, camera->getTMin());
         if(b) {
-            Vector3f color = k_a * ambient;
+            Vector3f color = ambient;
             for(int k = 0; k < lights.size(); k++) {
                 Vector3f p = r.pointAtParameter(h.getT());
                 Vector3f dir, col;
@@ -114,7 +113,7 @@ int main( int argc, char* argv[] )
                 depth.SetPixel(i, j, Vector3f(f, f, f));
             }
         } else {
-            image.SetPixel(i, j, missColor);
+            image.SetPixel(i, j, background);
         }
     }
   }

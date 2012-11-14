@@ -11,14 +11,24 @@ class Plane: public Object3D
 {
 public:
 	Plane(){}
-	Plane( const Vector3f& normal , float d , Material* m):Object3D(m){
+	Plane( const Vector3f& normal , float d , Material* m):Object3D(m), normal(normal), d(d) {
+	    
 	}
 	~Plane(){}
 	virtual bool intersect( const Ray& r , Hit& h , float tmin){
-		return 0;
+		float a = d - Vector3f::dot(normal, r.getOrigin());
+		float b = Vector3f::dot(normal, r.getDirection());
+		// parallel case sucks, ignore it
+		if(fabs(b) < 1e-5) return 0;
+		float t = a / b;
+		if(t < tmin || t >= h.getT()) return 0;
+		h.set(t, material, normal);
+		return 1;
 	}
 
 protected:
+    Vector3f normal;
+    float d;
 };
 #endif //PLANE_H
 		

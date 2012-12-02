@@ -26,6 +26,7 @@ public:
   Vector3f traceRay( Ray& ray, float tmin, int bounces, 
                      float refr_index, Hit& hit ) const;
   Vector3f traceRay(Ray& ray, Hit& hit) const;
+  bool is_shaded(Ray& ray) const;
 private:
   SceneParser* scene;
 

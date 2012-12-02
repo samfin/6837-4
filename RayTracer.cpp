@@ -37,6 +37,11 @@ RayTracer::~RayTracer()
 {
 }
 
+bool RayTracer::is_shaded(Ray &ray) const {
+    Hit hit = Hit( FLT_MAX, NULL, Vector3f( 0, 0, 0 ) );
+    return group->intersect(ray, hit, EPSILON);
+}
+
 Vector3f RayTracer::traceRay(Ray &ray, Hit &hit) const {
     return this->traceRay(ray, camera->getTMin(), m_maxBounces, 1, hit);
 }
@@ -50,10 +55,14 @@ Vector3f RayTracer::traceRay( Ray& ray, float tmin, int bounces,
     if(b) {
         Vector3f color = hit.getMaterial()->ambientShade(hit, ambient);
         for(int k = 0; k < lights.size(); k++) {
+            // Check shadow ray
             Vector3f p = ray.pointAtParameter(hit.getT());
             Vector3f dir, col;
             float dist;
             lights[k]->getIllumination(p, dir, col, dist);
+            Ray toLight = Ray(p, dir);
+            if(this->is_shaded(toLight)) continue;
+            // Add illumination
             color += hit.getMaterial()->Shade(ray, hit, dir, col);
         }
         return color;

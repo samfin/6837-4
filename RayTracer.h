@@ -25,11 +25,15 @@ public:
   
   Vector3f traceRay( Ray& ray, float tmin, int bounces, 
                      float refr_index, Hit& hit ) const;
+  Vector3f traceRay(Ray& ray, Hit& hit) const;
 private:
-  SceneParser* m_scene;
+  SceneParser* scene;
 
   int m_maxBounces;
-
+  Group *group;
+  Camera *camera;
+  vector<Light*> lights;
+  Vector3f ambient;
 };
 
 #endif // RAY_TRACER_H

@@ -8,6 +8,7 @@
 #include "SceneParser.h"
 #include "Image.h"
 #include "Camera.h"
+#include "RayTracer.h"
 #include <string.h>
 
 using namespace std;
@@ -79,46 +80,31 @@ int main( int argc, char* argv[] )
   // the scene.  Write the color at the intersection to that
   // pixel in your output image.
 
-  SceneParser *parser = new SceneParser(x.input);
+  SceneParser *scene = new SceneParser(x.input);
+  RayTracer *tracer = new RayTracer(scene, 0);
+  Camera *camera = scene->getCamera();
   Image image(x.w, x.h);
   Image depth(x.w, x.h);
-  Camera *camera = parser->getCamera();
-  Group *group = parser->getGroup();
-  vector<Light*> lights;
-  for(int i = 0; i < parser->getNumLights(); i++) {
-    lights.push_back(parser->getLight(i));
-  }
-  Vector3f ambient = parser->getAmbientLight();
   for(int i = 0; i < x.w; i++) {
     for(int j = 0; j < x.h; j++) {
         float x0 = i * 2.0 / (x.w - 1) - 1;
         float x1 = j * 2.0 / (x.w - 1) - 1;
         Ray r = camera->generateRay(Vector2f(x0, x1));
-        Vector3f background = parser->getBackgroundColor(r.getDirection());
         Hit h;
-        bool b = group->intersect(r, h, camera->getTMin());
-        if(b) {
-            Vector3f color = h.getMaterial()->ambientShade(h, ambient);
-            for(int k = 0; k < lights.size(); k++) {
-                Vector3f p = r.pointAtParameter(h.getT());
-                Vector3f dir, col;
-                float dist;
-                lights[k]->getIllumination(p, dir, col, dist);
-                color += h.getMaterial()->Shade(r, h, dir, col);
-            }
-            image.SetPixel(i, j, color);
-            if(x.depth) {
-                float f = clampedDepth(h.getT(), x.dmin, x.dmax);
-                depth.SetPixel(i, j, Vector3f(f, f, f));
-            }
-        } else {
-            image.SetPixel(i, j, background);
+        Vector3f color = tracer->traceRay(r, h);
+        image.SetPixel(i, j, color);
+        /*
+        if(x.depth) {
+            float f = clampedDepth(h.getT(), x.dmin, x.dmax);
+            depth.SetPixel(i, j, Vector3f(f, f, f));
         }
+        */
     }
   }
   image.SaveImage(x.output);
-  if(x.depth) depth.SaveImage(x.depth);
-  delete parser;
+  // if(x.depth) depth.SaveImage(x.depth);
+  delete tracer;
+  delete scene;
   return 0;
 }
 

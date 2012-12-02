@@ -2,7 +2,7 @@ CC = g++
 SRCS = $(wildcard *.cpp)
 SRCS += $(wildcard vecmath/src/*.cpp)
 OBJS = $(SRCS:.cpp=.o)
-PROG = a4
+PROG = a5
 CFLAGS = -O2 -Wall -Wextra
 INCFLAGS = -Ivecmath/include
 

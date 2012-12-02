@@ -89,12 +89,12 @@ int main( int argc, char* argv[] )
     lights.push_back(parser->getLight(i));
   }
   Vector3f ambient = parser->getAmbientLight();
-  Vector3f background = parser->getBackgroundColor();
   for(int i = 0; i < x.w; i++) {
     for(int j = 0; j < x.h; j++) {
         float x0 = i * 2.0 / (x.w - 1) - 1;
         float x1 = j * 2.0 / (x.w - 1) - 1;
         Ray r = camera->generateRay(Vector2f(x0, x1));
+        Vector3f background = parser->getBackgroundColor(r.getDirection());
         Hit h;
         bool b = group->intersect(r, h, camera->getTMin());
         if(b) {

@@ -30,7 +30,7 @@ SceneParser::SceneParser(const char* filename) {
     num_materials = 0;
     materials = NULL;
     current_material = NULL;
-
+	cubemap = 0;
     // parse the file
     assert(filename != NULL);
     const char *ext = &filename[strlen(filename)-4];
@@ -131,13 +131,21 @@ void SceneParser::parseBackground() {
             background_color = readVector3f();
         } else if (!strcmp(token, "ambientLight")) {
             ambient_light = readVector3f();
-        } else {
+        } else if(strcmp(token,"cubeMap")==0){
+			cubemap = parseCubeMap();
+		}else {
             printf ("Unknown token in parseBackground: '%s'\n", token);
             assert(0);
         }
     }
 }
 
+CubeMap * SceneParser::parseCubeMap()
+{
+	char token[MAX_PARSER_TOKEN_LENGTH];
+	getToken(token);
+	return new CubeMap(token);
+}
 // ====================================================================
 // ====================================================================
 
@@ -180,13 +188,23 @@ Light* SceneParser::parseDirectionalLight() {
 }
 Light* SceneParser::parsePointLight() {
     char token[MAX_PARSER_TOKEN_LENGTH];
+    Vector3f position,color;
+    float falloff =0;
     getToken(token); assert (!strcmp(token, "{"));
-    getToken(token); assert (!strcmp(token, "position"));
-    Vector3f position = readVector3f();
-    getToken(token); assert (!strcmp(token, "color"));
-    Vector3f color = readVector3f();
-    getToken(token); assert (!strcmp(token, "}"));
-    return new PointLight(position,color);
+    while (1) {
+        getToken(token); 
+        if (strcmp(token, "position")==0) {
+            position = readVector3f();
+        }else if (strcmp(token, "color")==0) {
+          color = readVector3f();
+        }else if(strcmp(token,"falloff")==0){    
+          falloff = readFloat();
+        }else{
+           assert (!strcmp(token, "}"));
+          break;
+        }
+    }
+    return new PointLight(position,color,falloff);
 }
 // ====================================================================
 // ====================================================================
@@ -221,7 +239,9 @@ Material* SceneParser::parseMaterial() {
 	filename[0] = 0;
     Vector3f diffuseColor(1,1,1), specularColor(0,0,0);
 	float shininess=0;
+	float refractionIndex =0;
     getToken(token); assert (!strcmp(token, "{"));
+	Noise *noise =0;
     while (1) {
         getToken(token); 
         if (strcmp(token, "diffuseColor")==0) {
@@ -232,22 +252,70 @@ Material* SceneParser::parseMaterial() {
         }
 		else if (strcmp(token, "shininess")==0) {
             shininess = readFloat();
-        }
+        }else if(strcmp(token, "refractionIndex")==0){
+			refractionIndex = readFloat();
+		}
 		else if (strcmp(token, "texture")==0) {
             getToken(filename);
+        }
+		///unimplemented
+		else if (strcmp(token, "bump")==0) {
+            getToken(token);
+        }
+		else if(strcmp(token,"Noise")==0){
+			noise = parseNoise();
+		}
+		else {
+            assert (!strcmp(token, "}"));
+            break;
+        }
+    }
+    Material *answer = new Material(diffuseColor, specularColor, shininess,refractionIndex);
+	if(filename[0] !=0){
+		answer->loadTexture(filename);
+	}
+	if(noise != 0){
+		answer->setNoise(*noise);
+		delete noise;
+	}
+    return answer;
+}
+Noise * SceneParser::parseNoise()
+{
+    char token[MAX_PARSER_TOKEN_LENGTH];
+	Vector3f color[2];
+	int colorIdx = 0;
+	int octaves=0;
+	float frequency  = 1;
+	float amplitude = 1;
+	getToken(token); assert (!strcmp(token, "{"));
+	Noise *noise =0;
+    while (1) {
+        getToken(token); 
+        if (strcmp(token, "color")==0) {
+			if(colorIdx > 1){
+				printf("Error parsing noise\n");
+			}else{
+				color[colorIdx]= readVector3f();
+				colorIdx++;
+			}
+        }
+		else if (strcmp(token, "octaves")==0) {
+            octaves= readInt();
+        }
+		else if (strcmp(token, "frequency")==0) {
+            frequency= readFloat();
+        }
+		else if (strcmp(token, "amplitude")==0) {
+            amplitude= readFloat();
         }
 		else {
             assert (!strcmp(token, "}"));
             break;
         }
     }
-    Material *answer = new Material(diffuseColor, specularColor, shininess);
-	if(filename[0] !=0){
-		answer->loadTexture(filename);
-	}
-    return answer;
+	return new Noise(octaves, color[0],color[1],frequency,amplitude);
 }
-
 // ====================================================================
 // ====================================================================
 

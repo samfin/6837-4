@@ -81,7 +81,7 @@ int main( int argc, char* argv[] )
   // pixel in your output image.
 
   SceneParser *scene = new SceneParser(x.input);
-  RayTracer *tracer = new RayTracer(scene, 0);
+  RayTracer *tracer = new RayTracer(scene, 1);
   Camera *camera = scene->getCamera();
   Image image(x.w, x.h);
   Image depth(x.w, x.h);

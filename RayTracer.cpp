@@ -12,7 +12,9 @@
 //These function definitions are mere suggestions. Change them as you like.
 Vector3f mirrorDirection( const Vector3f& normal, const Vector3f& incoming)
 {
-    return Vector3f();
+    Vector3f v = incoming - 2 * Vector3f::dot(normal, incoming) * normal;
+    v.normalize();
+    return v;
 }
 
 bool transmittedDirection( const Vector3f& normal, const Vector3f& incoming, 
@@ -51,8 +53,7 @@ Vector3f RayTracer::traceRay( Ray& ray, float tmin, int bounces,
 {
     if(bounces < 0) return Vector3f(0, 0, 0);
     hit = Hit( FLT_MAX, NULL, Vector3f( 0, 0, 0 ) );
-    bool b = group->intersect(ray, hit, tmin);
-    if(b) {
+    if(group->intersect(ray, hit, tmin)) {
         Vector3f color = hit.getMaterial()->ambientShade(hit, ambient);
         for(int k = 0; k < lights.size(); k++) {
             // Check shadow ray
@@ -60,10 +61,20 @@ Vector3f RayTracer::traceRay( Ray& ray, float tmin, int bounces,
             Vector3f dir, col;
             float dist;
             lights[k]->getIllumination(p, dir, col, dist);
+            dir.normalize();
             Ray toLight = Ray(p, dir);
             if(this->is_shaded(toLight)) continue;
             // Add illumination
             color += hit.getMaterial()->Shade(ray, hit, dir, col);
+            // Add reflection
+            Vector3f reflection = hit.getMaterial()->getSpecularColor();
+            if (bounces && (reflection[0] || reflection[1] || reflection[2])) {
+                Vector3f mirror = mirrorDirection(hit.getNormal(), ray.getDirection());
+                Ray r = Ray(p, mirror);
+                Hit tmp_h;
+                Vector3f v = traceRay(r, EPSILON, bounces-1, refr_index, tmp_h);
+                color += Material::pointwiseDot(reflection, v);
+            }
         }
         return color;
     } else {

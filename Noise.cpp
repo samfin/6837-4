@@ -5,7 +5,9 @@ Vector3f Noise::getColor(const Vector3f & pos)
 {
   //Fill in this function  ONLY.
   //INTERPOLATE BETWEEN TWO COLORS BY WEIGHTED AVERAGE
-  return Vector3f(1,1,1);
+  double n = PerlinNoise::octaveNoise(pos, octaves);
+  double m = .5 + .5 * sin(frequency * pos[0] + amplitude * n);
+  return m * color[0] + (1-m) * color[1];
 }
 
 Noise::Noise(int _octaves,const Vector3f & color1, 

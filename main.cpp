@@ -23,6 +23,8 @@ struct args {
     char *output;
     int dmin, dmax;
     char *depth;
+    int bounces;
+    bool shadows;
 };
 
 int parse_int(char *x) {
@@ -35,6 +37,8 @@ int parse_int(char *x) {
 
 void get_args(int argc, char *argv[], args &args) {
     args.depth = 0;
+    args.bounces = 4;
+    args.shadows = 0;
     for(int i = 1; i < argc; ) {
         if(strcmp(argv[i],"-input")==0) {
             args.input = argv[i+1];
@@ -51,6 +55,12 @@ void get_args(int argc, char *argv[], args &args) {
             args.dmax = parse_int(argv[i+2]);
             args.depth = argv[i+3];
             i += 4;
+        } else if(strcmp(argv[i],"-bounces")==0) {
+            args.bounces = parse_int(argv[i+1]);
+            i += 2;
+        } else if(strcmp(argv[i],"-shadows")==0) {
+            args.shadows = 1;
+            i += 1;
         } else {
             cout << "Could not recognize argument " << argv[i] << "\n";
             i++;
@@ -81,7 +91,7 @@ int main( int argc, char* argv[] )
   // pixel in your output image.
 
   SceneParser *scene = new SceneParser(x.input);
-  RayTracer *tracer = new RayTracer(scene, 1);
+  RayTracer *tracer = new RayTracer(scene, x.bounces, x.shadows);
   Camera *camera = scene->getCamera();
   Image image(x.w, x.h);
   Image depth(x.w, x.h);

@@ -22,23 +22,13 @@ Vector3f Material::Shade( const Ray& ray, const Hit& hit,
 		}else{
       kd = this->diffuseColor;
     }
-	Vector3f n = hit.getNormal().normalized();
 	//Diffuse Shading
 	if(noise.valid()){
 		kd = noise.getColor(ray.getOrigin()+ray.getDirection()*hit.getT());
 	}
+	Vector3f n = hit.getNormal().normalized();
 	Vector3f color = clampedDot( dirToLight ,n )*pointwiseDot( lightColor , kd);
 	return color;
-	/*
-	//Specular shading
-	Vector3f r = ray.getDirection();
-	r = r - 2 * Vector3f::dot(r, n) * n;
-	r.normalize();
-	float s = clampedDot(dirToLight, r);
-	s = pow(s, shininess);
-	Vector3f specular = s * pointwiseDot(lightColor, specularColor);
-	return color + specular;
-	*/
 }
 
 Vector3f Material::pointwiseDot( const Vector3f& v1 , const Vector3f& v2 ) {

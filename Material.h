@@ -19,7 +19,7 @@ public:
 
     virtual Vector3f getDiffuseColor() const ;
     Vector3f ambientShade(const Hit& hit, const Vector3f& ambient);
-
+    
     Vector3f Shade( const Ray& ray, const Hit& hit,
             const Vector3f& dirToLight, const Vector3f& lightColor ) ;
 

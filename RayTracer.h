@@ -19,14 +19,13 @@ public:
       assert( false );
   }
 
-  RayTracer( SceneParser* scene, int max_bounces //more arguments as you need...
-  );
+  RayTracer( SceneParser* scene, int max_bounces, bool shadows);
   ~RayTracer();
   
   Vector3f traceRay( Ray& ray, float tmin, int bounces, 
                      float refr_index, Hit& hit ) const;
   Vector3f traceRay(Ray& ray, Hit& hit) const;
-  bool is_shaded(Ray& ray) const;
+  bool is_shaded(Ray& ray, float dist) const;
 private:
   SceneParser* scene;
 
@@ -35,6 +34,7 @@ private:
   Camera *camera;
   vector<Light*> lights;
   Vector3f ambient;
+  bool shadows;
 };
 
 #endif // RAY_TRACER_H

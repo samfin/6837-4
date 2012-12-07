@@ -36,6 +36,7 @@ int parse_int(char *x) {
 }
 
 void get_args(int argc, char *argv[], args &args) {
+    // Set default args
     args.depth = 0;
     args.bounces = 4;
     args.shadows = 0;

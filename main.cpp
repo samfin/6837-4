@@ -69,6 +69,10 @@ void get_args(int argc, char *argv[], args &args) {
     }
 }
 
+float random_float() {
+    return 0.5 - (float) rand() / RAND_MAX;
+}
+
 #include "bitmap_image.hpp"
 int main( int argc, char* argv[] )
 {
@@ -96,24 +100,72 @@ int main( int argc, char* argv[] )
   Camera *camera = scene->getCamera();
   Image image(x.w, x.h);
   Image depth(x.w, x.h);
+  /*
   for(int i = 0; i < x.w; i++) {
     for(int j = 0; j < x.h; j++) {
         float x0 = i * 2.0 / (x.w - 1) - 1;
-        float x1 = j * 2.0 / (x.w - 1) - 1;
+        float x1 = j * 2.0 / (x.h - 1) - 1;
         Ray r = camera->generateRay(Vector2f(x0, x1));
         Hit h;
         Vector3f color = tracer->traceRay(r, h);
         image.SetPixel(i, j, color);
-        /*
-        if(x.depth) {
-            float f = clampedDepth(h.getT(), x.dmin, x.dmax);
-            depth.SetPixel(i, j, Vector3f(f, f, f));
+    }
+  }
+  */
+  x.w *= 3;
+  x.h *= 3;
+  Vector3f ***big_image = new Vector3f**[x.w];
+  for(int i = 0; i < x.w; i++) {
+    big_image[i] = new Vector3f*[x.h];
+    for(int j = 0; j < x.h; j++) {
+      big_image[i][j] = new Vector3f[2];
+        float x0 = (i + random_float()) * 2.0 / (x.w - 1) - 1;
+        float x1 = (j + random_float()) * 2.0 / (x.h - 1) - 1;
+        Ray r = camera->generateRay(Vector2f(x0, x1));
+        Hit h;
+        Vector3f color = tracer->traceRay(r, h);
+        big_image[i][j][0] = color;
+    }
+  }
+  float kernel[5] = {0.1201, 0.2339, 0.2931, 0.2339, 0.1201};
+  // Horizontal
+  for(int i = 0; i < x.w; i++) {
+    for(int j = 0; j < x.h; j++) {
+      big_image[i][j][1] = Vector3f(0, 0, 0);
+      for(int k = 0; k < 4; k++) {
+        int j2 = j + k - 2;
+        if(j2 < 0 || j2 >= x.h) continue;
+        big_image[i][j][1] += kernel[k] * big_image[i][j2][0];
+      }
+    }
+  }
+  // Vertical
+  for(int j = 0; j < x.h; j++) {
+    for(int i = 0; i < x.w; i++) {
+      big_image[i][j][0] = Vector3f(0, 0, 0);
+      for(int k = 0; k < 4; k++) {
+        int i2 = i + k - 2;
+        if(i2 < 0 || i2 >= x.w) continue;
+        big_image[i][j][0] += kernel[k] * big_image[i2][j][1];
+      }
+    }
+  }
+  // Down sample
+  x.w /= 3;
+  x.h /= 3;
+  for(int i = 0; i < x.w; i++) {
+    for(int j = 0; j < x.h; j++) {
+      Vector3f color = Vector3f(0, 0, 0);
+      for(int k = 0; k < 3; k++) {
+        for(int k2 = 0; k2 < 3; k2++) {
+          color += big_image[3*i + k][3*j + k2][0];
         }
-        */
+      }
+      color *= 1.0 / 9.0;
+      image.SetPixel(i, j, color);
     }
   }
   image.SaveImage(x.output);
-  // if(x.depth) depth.SaveImage(x.depth);
   delete tracer;
   delete scene;
   return 0;
